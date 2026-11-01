@@ -1,68 +1,64 @@
 # Closet Quest
 
-A multiplayer styling party inspired by a real dorm-room problem: owning clothes you forget about, then struggling to imagine what goes together.
+A multiplayer styling party with a small working photo-closet beta, inspired by real dorm-room closets: forgetting what we own, where it is, and what goes together.
 
-**Start with [START-HERE.html](START-HERE.html).** Download it and open it in your browser for the beginner publishing guide and submission text. No local coding software is required for the GitHub → Render route.
+**Updating an existing deployment? Start with [UPDATE-FIRST.html](UPDATE-FIRST.html).** It explains uploading this complete file set to your existing GitHub repository, deploying through your existing Render service, testing the update, editing the wording, and submitting the game.
 
-## Play
+## What works
 
-2–6 players join one room on separate phones or laptops. Everyone styles an illustrated avatar for the same occasion, keeps their look secret, and locks it in. All looks reveal together. Players rate each other outfit for occasion fit and creativity, then play three rounds. Tied totals share the win.
+- 2–6 players join a room on separate devices, without player accounts or installation.
+- Everyone styles for a shared occasion, locks a private look, reveals together, and rates occasion fit and creativity across three timed rounds.
+- A shared starter wardrobe contains 27 illustrated pieces across five categories.
+- **My Closet:** add a JPG/PNG/WebP photo, name, category, vibe/warmth tags, and “where is it” label. Choose the closest illustrated shape and adjust a suggested photo color.
+- Browse/search saved pieces by name, tags or location; edit and remove them.
+- Use illustrated personal pieces in solo styling or an unlocked multiplayer styling round. Reveal cards label personal pieces by name.
+- Export and import a private closet backup; save PNG outfit cards.
+- The roadmap clearly distinguishes working features from future ideas and supports an optional showcase image/video.
+- Main introductory text is editable in [content.mjs](content.mjs), including switches to move the story between home and How to play.
 
-- Six-character room codes and shareable invitation links
-- Server-sent events synchronize phases, readiness, reveals, and results
-- 27 illustrated clothing pieces across five categories
-- Two-minute styling and 90-second voting deadlines, enforced by the server
-- Optional custom first occasion; a rotating set of built-in prompts
-- Avatar skin/hair choices, keyword filters, and outfit captions
-- No self-votes, repeat ballots, or access to other players’ unrevealed outfits
-- Automatic host transfer when a host stops checking in
-- PNG outfit-card download and solo wardrobe preview
-- Mobile layouts, visible focus states, and built-in instructions
+## Honest scope
 
-## Run locally (optional)
+Photo handling creates a small local thumbnail and a **guided illustrated stand-in**, using existing garment shapes and a chosen color. It does not automatically trace cuts or patterns, remove backgrounds, recognize garments, generate a new avatar, or provide realistic try-on. No AI service or API key is used.
 
-Requires Node.js 22 or newer. No third-party packages, database, credentials, or AI API keys.
+Photo thumbnails, tags and storage locations stay in local browser storage, with a 24-piece beta limit. Only a personal piece’s illustrated shape, color, name and identifier enter the shared game. Browser data is specific to that browser and origin; private sessions, browser clearing and storage restrictions can remove or prevent it. Export a backup for safekeeping. Backups contain personal photos and notes.
+
+Game rooms and scores are temporary process memory, reset by a restart, shutdown or redeploy. A free Render service can take about a minute to wake after inactivity. Keep one server instance; this version does not use a shared database.
+
+## Run and test
+
+Node.js 22 or newer, with no third-party packages:
 
 ```bash
 npm install
 npm start
 ```
 
-Open `http://localhost:3000`. Test separate players in separate browser profiles/private windows or on separate devices. Tabs in the same browser may copy session storage when duplicated; a private window is clearer for testing.
+Open `http://localhost:3000`. Separate browser profiles, private windows or devices represent separate players.
 
 ```bash
 npm test
 ```
 
-Tests cover authorization, private previews, player limits, timers, voting, scores, host transfer, and the HTTP/SSE transport. Visual and cross-device acceptance must also be checked on the deployed link.
+Tests cover game rules, private previews, authenticated updates, timers, ratings, custom illustration validation, local storage, backup import, and exclusion of photos/locations from shared state. The deployment also needs the visual/photo acceptance test in the update guide.
 
-## Deploy
+## Deploy on Render
 
-Upload the extracted project files to the root of a GitHub repository. On Render, create a **Web Service**, connect the repository, select Node, use `npm install` as Build Command and `npm start` as Start Command, and choose the Free instance if offered. Leave Root Directory blank when `package.json` is at the repository root. `render.yaml` is included for optional Blueprint deployment, but the manual Web Service form is the beginner route.
+Use a Node **Web Service**, Build Command `npm install`, Start Command `npm start`, and a blank Root Directory when `package.json` is at the repository root. No environment variables are required; the server uses the platform’s `PORT` and binds to `0.0.0.0`. Health endpoint: `/health`. `render.yaml` is optional Blueprint configuration.
 
-The server binds to `0.0.0.0` and Render’s `PORT`. `/health` is the health-check endpoint. Keep this deployment to one instance because rooms live in process memory.
+Upload all project files together. New modules must be served by the updated server. See [Render’s documentation](https://render.com/docs/deploy-node-express-app) and [free-service limits](https://render.com/docs/free).
 
-## Scope and limits
-
-This is a playable first edition, not a full personal wardrobe organizer. It uses a shared starter wardrobe, not uploaded clothing photos, generated avatars, virtual try-on, or an AI stylist. Filters match explicit names and tags.
-
-Rooms and scores are temporary: server restarts, redeploys, or free-service shutdowns reset them. A free Render service sleeps after inactivity and can take about a minute to wake. New groups can create fresh rooms after it wakes. No long-term wardrobe or score storage is promised. Player tokens live in session storage so a normal refresh can reconnect while the room still exists.
-
-See [Render’s free-service documentation](https://render.com/docs/free). Free hosting is subject to account availability, usage limits, and the provider’s current terms; do not select a paid plan unintentionally.
-
-## Project structure
+## Edit and customize
 
 | File | Purpose |
 | --- | --- |
-| `server.mjs` | HTTP server, authenticated API, and live SSE updates |
-| `game.mjs` | Authoritative room, phase, timer, and scoring logic |
-| `catalog.mjs` | Clothing items, categories, tags, and occasion prompts |
-| `art.mjs` | Original SVG clothing and avatar drawing code |
-| `app.mjs` | Browser interface and player interactions |
-| `index.html`, `styles.css`, `favicon.svg` | Page, styling, and icon |
-| `game.test.mjs` | Automated server and game tests |
-| `package.json`, `package-lock.json`, `render.yaml` | Run/deployment configuration |
-| `START-HERE.html` | Beginner setup and submission guide |
-| `COVER.png` | Ready-to-upload project cover image |
+| `content.mjs` | Main wording, story placement, optional showcase path/caption |
+| `app.mjs` | Navigation and game views |
+| `closet-ui.mjs` | Photo preparation, closet interface and roadmap |
+| `closet-store.mjs` | Local data validation, storage and backups |
+| `catalog.mjs` | Starter items, tags, categories and occasions |
+| `art.mjs` | SVG character, garment shapes and custom colors |
+| `game.mjs` | Authoritative multiplayer state and scoring |
+| `server.mjs` | HTTP routes, authenticated API and server-sent updates |
+| `index.html`, `styles.css` | Page metadata, help rules and visual layout |
 
-Created by Thu Ha Nguyen with ChatGPT. The concept comes from observing everyday wardrobe challenges in a shared dorm. Built with JavaScript, Node.js, HTML, CSS, SVG, and server-sent events.
+Created by Thu Ha Nguyen with ChatGPT. Built with JavaScript, Node.js, HTML, CSS, SVG, Canvas and server-sent events.

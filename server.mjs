@@ -2,18 +2,18 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {Game} from './game.mjs';
-const files=new Map([['/','index.html'],['/styles.css','styles.css'],['/app.mjs','app.mjs'],['/catalog.mjs','catalog.mjs'],['/art.mjs','art.mjs'],['/favicon.svg','favicon.svg']]);
-const mime={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',mjs:'text/javascript; charset=utf-8',svg:'image/svg+xml'};
+const files=new Map([['/','index.html'],['/styles.css','styles.css'],['/app.mjs','app.mjs'],['/catalog.mjs','catalog.mjs'],['/art.mjs','art.mjs'],['/favicon.svg','favicon.svg'],['/content.mjs','content.mjs'],['/closet-ui.mjs','closet-ui.mjs'],['/closet-store.mjs','closet-store.mjs'],...['png','jpg','webp','mp4','webm'].map(ext=>['/showcase.'+ext,'showcase.'+ext])]);
+const mime={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',mjs:'text/javascript; charset=utf-8',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',webp:'image/webp',mp4:'video/mp4',webm:'video/webm'};
 export function createApp({game=new Game()}={}){
  const streams=new Map(),rates=new Map();
  function send(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
  function push(){for(const [res,c] of streams){const r=game.rooms.get(c.code),p=r?.players.find(x=>x.id===c.id);if(!r||!p){res.write('event: ended\ndata: {}\n\n');res.end();streams.delete(res);continue;}if(c.revision!==r.revision){res.write(`data: ${JSON.stringify(game.view(r,p))}\n\n`);c.revision=r.revision;}}}
  const server=http.createServer(async(req,res)=>{try{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','DENY');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
   const url=new URL(req.url,'http://localhost');
   if(url.pathname==='/health'){send(res,200,{ok:true});return;}
-  if(req.method==='GET'&&files.has(url.pathname)){const f=files.get(url.pathname);res.writeHead(200,{'Content-Type':mime[f.split('.').pop()],'Cache-Control':'no-cache'});res.end(await readFile(new URL(f,import.meta.url)));return;}
+  if(req.method==='GET'&&files.has(url.pathname)){const f=files.get(url.pathname);let bytes;try{bytes=await readFile(new URL(f,import.meta.url));}catch(e){if(e.code==='ENOENT'){send(res,404,{error:'File not found'});return;}throw e;}res.writeHead(200,{'Content-Type':mime[f.split('.').pop()],'Cache-Control':'no-cache'});res.end(bytes);return;}
   if(req.method==='GET'&&url.pathname==='/api/events'){
    const r=game.room(url.searchParams.get('code')),p=game.auth(r,url.searchParams.get('token'));for(const [old,c] of streams)if(c.id===p.id){old.end();streams.delete(old);}
    res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache, no-transform','Connection':'keep-alive','X-Accel-Buffering':'no'});res.write('retry: 2000\n\n');streams.set(res,{code:r.code,id:p.id,revision:-1});req.on('close',()=>streams.delete(res));push();return;

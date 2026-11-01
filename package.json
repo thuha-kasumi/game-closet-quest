@@ -1,9 +1,9 @@
 {
   "name": "closet-quest",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A multiplayer styling party inspired by the clothes hiding in our closets.",
   "type": "module",
   "engines": { "node": ">=22" },
-  "scripts": { "start": "node server.mjs", "test": "node --test game.test.mjs" }
+  "scripts": { "start": "node server.mjs", "test": "node --test game.test.mjs closet.test.mjs" }
 }
